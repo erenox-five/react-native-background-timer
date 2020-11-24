@@ -26,6 +26,19 @@ class BackgroundTimer {
         callback();
       }
     });
+
+    Emitter.addListener('backgroundTimer.interval', (id) => {
+      if (this.callbacks[id]) {
+        const callbackById = this.callbacks[id];
+        const { callback } = callbackById;
+        if (!this.callbacks[id].interval) {
+          delete this.callbacks[id];
+        } else {
+          RNBackgroundTimer.setTimeout(id, this.callbacks[id].timeout);
+        }
+        callback();
+      }
+    });
   }
 
   // Original API
@@ -92,7 +105,7 @@ class BackgroundTimer {
       interval: true,
       timeout,
     };
-    RNBackgroundTimer.setTimeout(intervalId, timeout);
+    RNBackgroundTimer.setInterval(intervalId, timeout);
     return intervalId;
   }
 

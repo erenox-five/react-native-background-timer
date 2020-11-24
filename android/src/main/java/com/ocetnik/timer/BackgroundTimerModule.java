@@ -89,6 +89,23 @@ public class BackgroundTimerModule extends ReactContextBaseJavaModule {
         }, (long) timeout);
     }
 
+
+    @ReactMethod
+    public void setInterval(final int id, final double timeout) {
+        final Handler handler = new Handler();
+        handler.post(new Runnable(){
+            @Override
+            public void run(){
+                if (getReactApplicationContext().hasActiveCatalystInstance()) {
+                    getReactApplicationContext()
+                        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                        .emit("backgroundTimer.interval", id);
+                        handler.postDelayed(this, (long)timeout);
+                }
+           }
+        });
+    }
+
     /*@ReactMethod
     public void clearTimeout(final int id) {
         // todo one day..

@@ -12,7 +12,7 @@
 @implementation RNBackgroundTimer {
     UIBackgroundTaskIdentifier bgTask;
     int delay;
-    NSTimer timer;
+    NSTimer *timer;
 }
 
 RCT_EXPORT_MODULE()
@@ -88,14 +88,14 @@ RCT_EXPORT_METHOD(setTimeout:(int)timeoutId
 
 RCT_EXPORT_METHOD(setInterval:(int)timeoutId
                   timeout:(double)timeout
-                  resolver(RCTPromiseResolveBlock)resolve
+                  resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     __block UIBackgroundTaskIdentifier task = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"RNBackgroundTimer" expirationHandler:^{
         [[UIApplication sharedApplication] endBackgroundTask:task];
     }];
     
-    timer = [NSTimer timerWithTimeInterval:1.0 target:self selector:@selector(onTimer:) userInfo:@(timeoutId) repeats:YES];
+    timer = [NSTimer timerWithTimeInterval:timeout/1000 target:self selector:@selector(onTimer:) userInfo:@(timeoutId) repeats:YES];
       [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 
     resolve([NSNumber numberWithBool:YES]);

@@ -93,7 +93,6 @@ class BackgroundTimer {
   }
 
   setInterval(callback, timeout) {
-    console.log('Set interval');
     this.uniqueId += 1;
     const intervalId = this.uniqueId;
     this.callbacks[intervalId] = {

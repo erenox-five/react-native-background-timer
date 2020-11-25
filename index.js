@@ -31,11 +31,6 @@ class BackgroundTimer {
       if (this.callbacks[id]) {
         const callbackById = this.callbacks[id];
         const { callback } = callbackById;
-        if (!this.callbacks[id].interval) {
-          delete this.callbacks[id];
-        } else {
-          RNBackgroundTimer.setTimeout(id, this.callbacks[id].timeout);
-        }
         callback();
       }
     });
@@ -98,6 +93,7 @@ class BackgroundTimer {
   }
 
   setInterval(callback, timeout) {
+    console.log('Set interval');
     this.uniqueId += 1;
     const intervalId = this.uniqueId;
     this.callbacks[intervalId] = {
@@ -110,9 +106,9 @@ class BackgroundTimer {
   }
 
   clearInterval(intervalId) {
+    RNBackgroundTimer.clearInterval();
     if (this.callbacks[intervalId]) {
       delete this.callbacks[intervalId];
-      // RNBackgroundTimer.clearTimeout(intervalId);
     }
   }
 }

@@ -12,12 +12,13 @@
 @implementation RNBackgroundTimer {
     UIBackgroundTaskIdentifier bgTask;
     int delay;
+    int elapsed;
     NSTimer *timer;
 }
 
 RCT_EXPORT_MODULE()
 
-- (NSArray<NSString *> *)supportedEvents { return @[@"backgroundTimer", @"backgroundTimer.timeout", @"backgroundTimer.interval"]; }
+- (NSArray<NSString *> *)supportedEvents { return @[@"backgroundTimer", @"backgroundTimer.timeout", @"backgroundTimer.interval", @"backgroundTimer.chronoTick"]; }
 
 - (void) _start
 {
@@ -49,6 +50,13 @@ RCT_EXPORT_MODULE()
     int timeoutId = [timer.userInfo intValue];
     if ([self bridge] != nil) {
         [self sendEventWithName:@"backgroundTimer.interval" body:[NSNumber numberWithInt: timeoutId]];
+    }
+}
+
+- (void) onChronoTick {
+    elapsed++;
+    if ([self bridge] != nil) {
+        [self sendEventWithName:@"backgroundTimer.chronoTick" body:[NSNumber numberWithInt: elapsed]];
     }
 }
 
@@ -91,8 +99,8 @@ RCT_EXPORT_METHOD(setInterval:(int)timeoutId
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    __block UIBackgroundTaskIdentifier task = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"RNBackgroundTimer" expirationHandler:^{
-        [[UIApplication sharedApplication] endBackgroundTask:task];
+    bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"RNBackgroundTimer" expirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:self->bgTask];
     }];
     
     timer = [NSTimer timerWithTimeInterval:timeout/1000 target:self selector:@selector(onTimer:) userInfo:@(timeoutId) repeats:YES];
@@ -104,6 +112,10 @@ RCT_EXPORT_METHOD(setInterval:(int)timeoutId
 RCT_EXPORT_METHOD(clearInterval:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
+    if (bgTask != UIBackgroundTaskInvalid) {
+        [[UIApplication sharedApplication] endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }
     if (timer) {
             [timer invalidate];
             timer = nil;
@@ -111,6 +123,37 @@ RCT_EXPORT_METHOD(clearInterval:(RCTPromiseResolveBlock)resolve
     resolve([NSNumber numberWithBool:YES]);
 }
 
+RCT_EXPORT_METHOD(startChrono:(int)timeout
+                  resolver:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    bgTask = [[UIApplication sharedApplication] beginBackgroundTaskWithName:@"RNBackgroundTimer" expirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:self->bgTask];
+    }];
+    
+    elapsed = 0;
+    
+    timer = [NSTimer timerWithTimeInterval:timeout/1000 target:self selector:@selector(onChronoTick) userInfo:nil repeats:YES];
+      [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
+
+    resolve([NSNumber numberWithBool:YES]);
+}
+
+
+RCT_EXPORT_METHOD(stopChrono:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+{
+    elapsed = 0;
+    if (bgTask != UIBackgroundTaskInvalid) {
+        [[UIApplication sharedApplication] endBackgroundTask:bgTask];
+        bgTask = UIBackgroundTaskInvalid;
+    }
+    if (timer) {
+            [timer invalidate];
+            timer = nil;
+        }
+    resolve([NSNumber numberWithBool:YES]);
+}
 /*
 RCT_EXPORT_METHOD(clearTimeout:(int)timeoutId
                   resolver:(RCTPromiseResolveBlock)resolve
@@ -121,5 +164,7 @@ RCT_EXPORT_METHOD(clearTimeout:(int)timeoutId
 }*/
 
 @end
+
+
 
 

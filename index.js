@@ -13,6 +13,7 @@ class BackgroundTimer {
   constructor() {
     this.uniqueId = 0;
     this.callbacks = {};
+    this.chronoCallback = null;
 
     Emitter.addListener('backgroundTimer.timeout', (id) => {
       if (this.callbacks[id]) {
@@ -32,6 +33,12 @@ class BackgroundTimer {
         const callbackById = this.callbacks[id];
         const { callback } = callbackById;
         callback();
+      }
+    });
+
+    Emitter.addListener('backgroundTimer.chronoTick', (elapsed) => {
+      if (this.chronoCallback) {
+        this.chronoCallback(elapsed);
       }
     });
   }
@@ -109,6 +116,16 @@ class BackgroundTimer {
     if (this.callbacks[intervalId]) {
       delete this.callbacks[intervalId];
     }
+  }
+
+  startChrono(callback, interval) {
+    this.chronoCallback = callback;
+    RNBackgroundTimer.startChrono(interval);
+  }
+
+  stopChrono() {
+    RNBackgroundTimer.stopChrono();
+    this.chronoCallback = null;
   }
 }
 

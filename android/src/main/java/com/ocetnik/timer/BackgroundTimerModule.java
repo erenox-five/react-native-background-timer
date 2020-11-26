@@ -19,6 +19,7 @@ public class BackgroundTimerModule extends ReactContextBaseJavaModule {
     private Runnable runnable;
     private PowerManager powerManager;
     private PowerManager.WakeLock wakeLock;
+    private int elapsed = 0;
     private final LifecycleEventListener listener = new LifecycleEventListener(){
         @Override
         public void onHostResume() {}
@@ -106,6 +107,31 @@ public class BackgroundTimerModule extends ReactContextBaseJavaModule {
        };
        handler.post(runnable);
     }
+
+    @ReactMethod
+    public void startChrono(final double timeout) {
+        handler = new Handler();
+        runnable = new Runnable(){
+           @Override
+           public void run(){
+               elapsed++;
+               if (getReactApplicationContext().hasActiveCatalystInstance()) {
+                   getReactApplicationContext()
+                       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                       .emit("backgroundTimer.chronoTick", elapsed);
+                       handler.postDelayed(this, (long)timeout);
+               }
+          }
+       };
+       handler.post(runnable);
+    }
+
+    @ReactMethod
+    public void stopChrono() {
+        elapsed = 0;
+        handler.removeCallbacks(runnable);
+    }
+
 
     @ReactMethod
     public void clearInterval() {

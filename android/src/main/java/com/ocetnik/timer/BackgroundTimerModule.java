@@ -114,13 +114,13 @@ public class BackgroundTimerModule extends ReactContextBaseJavaModule {
         runnable = new Runnable(){
            @Override
            public void run(){
-               elapsed++;
                if (getReactApplicationContext().hasActiveCatalystInstance()) {
                    getReactApplicationContext()
                        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                        .emit("backgroundTimer.chronoTick", elapsed);
                        handler.postDelayed(this, (long)timeout);
                }
+               elapsed++;
           }
        };
        handler.post(runnable);
